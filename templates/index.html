@@ -1,0 +1,115 @@
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Wallet with MPC</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+            background-color: #f5f5f5;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        form {
+            margin-top: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 300px;
+            max-width: 90%;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            width: 150px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        p {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Crypto Wallet with MPC (Key Protection)</h1>
+    
+    <h2>Wallet Address</h2>
+    <p>{{ wallet_address }}</p>
+
+    <h2>Check Wallet Balance</h2>
+    <form id="balanceForm">
+        <input type="text" id="wallet_address" value="{{ wallet_address }}" readonly>
+        <button type="submit">Check Balance</button>
+    </form>
+    <p id="balanceResult"></p>
+
+    <h2>Send Ethereum</h2>
+    <form id="sendForm">
+        <input type="text" id="recipient_address" placeholder="Recipient Wallet Address" required>
+        <input type="text" id="recipient_name" placeholder="Recipient Name" required>
+        <input type="number" id="amount_ether" placeholder="Amount (ETH)" step="0.0001" required>
+        <button type="submit">Send ETH</button>
+    </form>
+    <p id="sendResult"></p>
+
+    <script>
+        document.getElementById("balanceForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const walletAddress = document.getElementById("wallet_address").value;
+            fetch("/check_balance", {
+                method: "POST",
+                body: new URLSearchParams({ wallet_address: walletAddress }),
+                headers: { "Content-Type": "application/x-www-form-urlencoded" }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("balanceResult").innerText = "Balance: " + data.balance + " ETH";
+            })
+            .catch(error => console.error("Error:", error));
+        });
+
+        document.getElementById("sendForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const recipientAddress = document.getElementById("recipient_address").value;
+            const recipientName = document.getElementById("recipient_name").value;
+            const amountEther = document.getElementById("amount_ether").value;
+            fetch("/send_eth", {
+                method: "POST",
+                body: new URLSearchParams({ 
+                    wallet_address: "{{ wallet_address }}",
+                    recipient_address: recipientAddress,
+                    recipient_name: recipientName,
+                    amount_ether: amountEther
+                }),
+                headers: { "Content-Type": "application/x-www-form-urlencoded" }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.tx_hash) {
+                    document.getElementById("sendResult").innerHTML = "Transaction Sent! TX Hash: " + data.tx_hash;
+                } else {
+                    document.getElementById("sendResult").innerHTML = "Error: " + data.error;
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        });
+    </script>
+</body>
+</html>
+
